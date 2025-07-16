@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package api_gateway;
+
+service ApiGateway {
+  rpc IncrementCounter (IncrementRequest) returns (IncrementResponse);
+}
+
+message IncrementRequest {}
+
+message IncrementResponse {
+  int64 new_value = 1;
+}

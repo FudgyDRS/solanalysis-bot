@@ -1,0 +1,28 @@
+[package]
+name = "api-gateway"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tonic = "0.11"
+prost = "0.12"
+
+# Database
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "chrono", "uuid", "rust_decimal"] }
+
+# Utilities
+serde = {version = "1.0", features = ["derive"]}
+chrono = {version = "0.4", features = ["serde"]}
+uuid = {version = "1.0", features = ["v4", "serde"]}
+rust_decimal = {version = "1.0", features = ["serde"]}
+
+# Async
+tokio = {version = "1.39", features = ["macros", "rt-multi-thread"]}
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+proto-gen = {path = "../../shared/proto-gen"}
+
+# Environment
+dotenv = "0.15"
