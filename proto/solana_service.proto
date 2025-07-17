@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package solana_service;
+
+service SolanaService {
+  rpc TrackWallet (TrackWalletRequest) returns (TrackWalletResponse);
+}
+
+message TrackWalletRequest {
+  string wallet_address = 1;
+
+  oneof filter {
+    SlotRange slot_range = 2;
+    TimeRange time_range = 3;
+  }
+}
+
+message SlotRange {
+  uint64 slot_start = 1;
+  uint64 slot_end = 2;
+}
+
+message TimeRange {
+  uint64 time_start = 1;
+  uint64 time_end = 2;
+}
+
+message TrackWalletResponse {
+  string message = 1;
+  int64 balance = 2;
+  Transactions transactions = 3;
+}
+
+message Transactions {
+  uint64 slot_start = 1;
+  uint64 slot_end = 2;
+  uint64 time_start = 3;
+  uint64 time_end = 4;
+  repeated Transaction transactions = 5;
+  uint64 transaction_count = 6;
+}
+
+message Transaction {
+  string signature = 1;
+  uint64 block_slot = 2;
+  uint64 block_time = 3;
+  string sender = 4;
+  string receiver = 5;
+  string token = 6;
+  string amount = 7;
+  bool success = 8;
+  string error_message = 9;
+}
