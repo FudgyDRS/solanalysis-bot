@@ -1,8 +1,19 @@
-use teloxide::{prelude::*, types::Message};
-use std::env;
+use teloxide::prelude::*
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use std::collections::HashMap;
 
-mod grpc_client;
-use grpc_client::increment_counter;
+mod handlers;
+mod services;
+mod grpc_clients;
+
+use handlers::get_commands;
+
+#[derive(Clone, Debug)]
+enum UserState {
+  Idle,
+  AwaitingWallet { network: String },
+}
 
 #[tokio::main]
 async fn main() {
@@ -11,31 +22,26 @@ async fn main() {
   log::info!("Starting Solana Wallet Bot...");
 
   let bot = Bot::from_env(); // TELEGRAM_BOT_TOKEN
+  let user_states = Arc::new(Mutex::new(Hashmap::<i64, UserState>::new()));
+  let commands = get_commands();
 
-  teloxide::repl(bot, |bot: Bot, msg: Message| async move {
-    if let Some(text) = msg.text() {
-      match text {
-        "/increment-counter" => {
-          match increment_counter().await {
-            Ok(count) => {
-              bot.send_message(msg.chat.id, format!("Counter is now: {}", count))
-                .await?;
-            }
-            Err(e) => {
-              bot.send_message(msg.chat.id, format!("Error: {}", e))
-                .await?;
-            }
+  teloxide::repl(bot, |bot: Bot, msg: Message| {
+    let commands = commands.clone();
+    let user_states = user_states.clone();
+
+    async move {
+      if let Some(text) = msg.text() {
+        let mut parts = text.split_whitespace();
+        if let Some(cmd) = parts.next() {
+          if let Some(command) = commands.get(cmd) {
+            (command.handler)(bot.clone(), msg.clone(), &mut parts).await;
+          } else {
+            bot.send_message(msg.chat.id, "Unknown command. Try /help\nYou send: {}", msg.text()).await.unwrap();
           }
         }
-        _ => {
-          bot.send_message(msg.chat.id, format!("Unknown command. Try /increment-counter\nYou sent: {}", text))
-            .await?;
-        }
       }
+      Ok::<(), teloxide::RequestError>(())
     }
-    // let text = msg.text().unwrap_or("send a wallet address");
-
-    ResponseResult::<()>::Ok(())
   })
   .await;
 }
