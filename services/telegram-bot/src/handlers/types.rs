@@ -1,16 +1,27 @@
 use teloxide::prelude::*;
 use std::str::SplitWhitespace;
 use std::future::Future;
-use str::pin::Pin;
+use std::pin::Pin;
+use std::sync::Arc;
 
-pub type CommandHandler = Box <
-  dyn Fn(Bot, Message, &mut SplitWhitespace<'_>) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>
+pub type CommandHandler =  dyn for<'a> Fn(
+    Bot, 
+    Message, 
+    &'a mut SplitWhitespace<'a>
+  ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>
   + Send
-  + Sync,
->;
+  + Sync;
 
+#[derive(Clone)]
 pub struct Command {
   pub description: &'static str,
   pub usage: &'static str,
-  pub handler: CommandHandler,
+  pub handler: Arc<CommandHandler>,
+}
+
+#[derive(Clone, Debug)]
+pub enum UserState {
+  Idle,
+  AwaitingNetwork,
+  AwaitingWallet { network: String },
 }

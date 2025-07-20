@@ -1,3 +1,3 @@
-pub mod api_gatway;
+pub mod api_gateway;
 pub mod solana_service;
 pub mod trading_engine;

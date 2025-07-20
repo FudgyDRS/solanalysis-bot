@@ -1,9 +1,10 @@
 use teloxide::prelude::*;
 use std::str::SplitWhitespace;
-use crate::handlers::type::{Command, CommandHandler};
+use std::sync::Arc;
+use crate::handlers::types::{Command, CommandHandler};
 use crate::services;
 
-pub async dn handle(bot: Bot, msg: Message, _pars: &mut SplitMessage<'_>) {
+pub async fn handle(bot: Bot, msg: Message, _parts: &mut SplitWhitespace<'_>) {
   match services::increment_counter::increment_counter().await {
     Ok(count) => {
       if let Err(e) = bot.send_message(msg.chat.id, format!("Counter is now: {}", count)).await {
@@ -11,7 +12,7 @@ pub async dn handle(bot: Bot, msg: Message, _pars: &mut SplitMessage<'_>) {
       }
     }
     Err(e) => {
-      if let Err(e) = bot.send_message(chat.msg.id, format!("Error: {}", e)).await {
+      if let Err(e) = bot.send_message(msg.chat.id, format!("Error: {}", e)).await {
         log::error!("Failed to send message: {}", e);
       }
     }
@@ -21,7 +22,7 @@ pub async dn handle(bot: Bot, msg: Message, _pars: &mut SplitMessage<'_>) {
 pub fn command() -> Command {
   Command {
     description: "Increment counter on database",
-    usage: "/increment_counter",
-    handler: Box::new(|bot, msg, parts| Box::pin(handle(bot, msg, parts))),
+    usage: "/increment\\_counter",
+    handler: Arc::new(|bot, msg, parts| Box::pin(handle(bot, msg, parts))),
   }
 }
