@@ -108,5 +108,3 @@ cargo build --workspace
 
 ⚠️ This project is under active development. Features will be added incrementally with an emphasis on stability, performance, and extensibility.
 
-
-Let me know if you'd like to also include a visual tree of the directory structure or describe how services communicate in more detail.
