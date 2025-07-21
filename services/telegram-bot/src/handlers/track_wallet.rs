@@ -24,8 +24,9 @@ pub async fn handle(
       .await
       .unwrap();
 
+    let user_id = msg.from.as_ref().map(|u| u.id.0).unwrap_or(0);
     let mut states = user_states.lock().await;
-    states.insert(msg.chat.id.0, UserState::AwaitingNetwork);
+    states.insert(msg.chat.id.0, UserState::AwaitingNetwork { user_id });
 
     return;
   }

@@ -8,7 +8,7 @@ mod services;
 mod grpc_clients;
 
 use handlers::get_commands;
-use crate::handlers::types::UserState;
+use crate::handlers::{UserState, Command};
 
 #[tokio::main]
 async fn main() {
@@ -18,15 +18,15 @@ async fn main() {
 
   let bot = Bot::from_env(); // TELEGRAM_BOT_TOKEN
   
-  let user_states = Arc::new(Mutex::new(HashMap<i64, UserState>::new()));
+  let user_states = Arc::new(Mutex::new(HashMap::<i64, UserState>::new()));
   let commands = Arc::new(get_commands());
 
-  let handler = Update::filter_message()
-    .branch(dptree::endpoint(handle_message))
-    .chain(Update::filter_callback_query().endpoint(handle_callback));
+  let handler = dptree::entry()
+    .branch(Update::filter_message().endpoint(handle_message))
+    .branch(Update::filter_callback_query().endpoint(handle_callback));
 
   Dispatcher::builder(bot.clone(), handler)
-    .dependencies(dptree::deps![commands, user_state])
+    .dependencies(dptree::deps![commands, user_states])
     .enable_ctrlc_handler()
     .build()
     .dispatch()
@@ -43,12 +43,13 @@ async fn handle_message(
     let chat_id = msg.chat.id.0;
     let mut parts = text.split_whitespace();
 
-    let mut states = user_states.lock().await;
-    if let Some(UserState::AwaitingWallet { network }) = states.get(&chat_id) {
+    let mut states = user_state.lock().await;
+    if let Some(UserState::AwaitingWallet { user_id: _, network }) = states.get(&chat_id) {
+      let network = network.clone();
       let wallet_address = parts.next().unwrap_or("unknown");
       states.insert(chat_id, UserState::Idle);
 
-      let response = crate::services::track_wallet::track_wallet(network, wallet_address).await.unwrap_or_else(|e| format!("Error: {}", e));
+      let response = crate::services::track_wallet::track_wallet(&network, wallet_address).await.unwrap_or_else(|e| format!("Error: {}", e));
       bot.send_message(msg.chat.id, response).await?;
       return Ok(());
     }
@@ -59,7 +60,7 @@ async fn handle_message(
       } else {
         bot.send_message(
           msg.chat.id,
-          format!("Unknown command. Try /help\nYou send: {}", text),
+          format!("Unknown command\\. Try /help\nYou send: {}", text),
         )
         .await?;
       }
@@ -71,29 +72,34 @@ async fn handle_message(
 
 async fn handle_callback(
   bot: Bot,
-  q: callbackQuery,
-  user_statesL Arc<Mutex<HashMap<i64, UserState>>>,
+  q: CallbackQuery,
+  user_states: Arc<Mutex<HashMap<i64, UserState>>>,
 ) -> Result<(), teloxide::RequestError> {
+  let msg = match &q.message {
+    Some(m) => m,
+    None => return Ok(()),
+  };
+
   if let Some(data) = q.data {
     if data.starts_with("track_wallet:") {
       let network = data.strip_prefix("track_wallet:").unwrap_or("solana");
-      let chat_id = q.from.id.0;
+      let chat_id = msg.chat().id.0;
+      let user_id = q.from.id.0;
 
       {
         let mut states = user_states.lock().await;
         states.insert(chat_id, UserState::AwaitingWallet {
-          network: newtwork.to_string()
+          user_id: user_id,
+          network: network.to_string(),
         });
       }
 
-      if let Some(msg) = q.message {
-        bot.send_message(msg.chat.id, format!(
-          "You selected `{}`. Please enter the wallet address.",
-          network
-        ))
-        .parse_mode(teloxide::types::ParseMode::MarkdownV2)
-        .await?;
-      }
+      bot.send_message(msg.chat().id, format!(
+        "You selected `{}`\\. Please enter the wallet address:",
+        network
+      ))
+      .parse_mode(teloxide::types::ParseMode::MarkdownV2)
+      .await?;
 
       bot.answer_callback_query(q.id).await?;
     }

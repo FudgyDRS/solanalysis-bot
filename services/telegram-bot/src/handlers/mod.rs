@@ -10,9 +10,6 @@ pub use increment_counter::command as increment_counter_command;
 pub use track_wallet::command as track_wallet_command;
 pub use help::command as help_command;
 
-use std::sync::Arc;
-use tokio::sync::Mutex;
-
 pub fn get_commands() -> HashMap<&'static str, Command> {
   let mut cmds = HashMap::new();
 

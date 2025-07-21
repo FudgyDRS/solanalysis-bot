@@ -19,9 +19,10 @@ pub struct Command {
   pub handler: Arc<CommandHandler>,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub enum UserState {
   Idle,
-  AwaitingNetwork,
-  AwaitingWallet { network: String },
+  AwaitingNetwork { user_id: u64 },
+  AwaitingWallet { user_id: u64, network: String },
 }
