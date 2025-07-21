@@ -40,6 +40,52 @@ flowchart TD
 
 ---
 
+## 📁 Project Structure
+```
+solanalysis/                                                                  #.
+├── services/                                                                 #.
+│ ├── telegram-bot/                                                           #.
+│ │ ├── grpc_clients/                                                         #.
+│ │ ├── handlers/                                                             #.
+│ │ ├── services/                                                             #.
+│ │ ├── main.rs                                                               #.
+│ │ └── Cargo.toml                                                            #.
+│ ├── solana-service/                                                         #.
+│ │ ├── grpc_server.rs                                                        #.
+│ │ ├── main.rs                                                               #.
+│ │ └── Cargo.toml                                                            #.
+│ ├── api-gateway/                                                            #.
+│ │ ├── config.rs                                                             #.
+│ │ ├── database.rs                                                           #.
+│ │ ├── grpc_server.rs                                                        #.
+│ │ ├── main.rs                                                               #.
+│ │ └── Cargo.toml                                                            #.
+│ ├── analytics-service/                                                      #.
+│ └── trading-engine/                                                         #.
+├── shared/                                                                   #.
+│ ├── config/                                                                 #.
+│ ├── database/                                                               #.
+│ │ └── migrations/                                                           #.
+│ ├── proto-gen/                                                              #.
+│ │ ├── build.rs                                                              #.
+│ │ ├── lib.rs                                                                #.
+│ │ ├── api_gateway.rs                                                        #.
+│ │ ├── solana_service.rs                                                     #.
+│ │ └── Cargo.toml                                                            #.
+│ └── utils/                                                                  #.
+├── proto/                                                                    #.
+│ ├── api_gateway.proto                                                       #.
+│ └── solana_service.proto                                                    #.
+├── infrastructure/                                                           #.
+│ └── k8s/                                                                    #.
+├── Makefile                                                                  #.
+├── Cargo.toml                                                                #.
+├── Cargo.lock                                                                #.
+├── README.md                                                                 #.
+```
+
+---
+
 ## ✨ Highlights
 
 - **Rust-native**: Every component is written in Rust for performance, safety, and maintainability.
